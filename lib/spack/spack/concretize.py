@@ -34,6 +34,7 @@ TODO: make this customizable and allow users to configure
       concretization  policies.
 """
 from __future__ import print_function
+from spack.version import *
 from itertools import chain
 from functools_backport import reverse_order
 from six import iteritems
@@ -256,7 +257,7 @@ class DefaultConcretizer(object):
             else:
                 setattr(architecture, component,
                         getattr(platform, methods[component])(default))
-        return True # spec changed
+        return True  # spec changed
 
     def concretize_architecture(self, spec):
         """If the spec's architecture is already concrete then return False.
@@ -296,7 +297,7 @@ class DefaultConcretizer(object):
 
     def concretize_variants(self, spec):
         """If the spec already has variants filled in, return. Otherwise,
-        add the user preferences from packages.yaml or the default variants 
+        add the user preferences from packages.yaml or the default variants
         from the package specification."""
         changed = False
         preferred_variants = PackagePrefs.preferred_variants(spec.name)
