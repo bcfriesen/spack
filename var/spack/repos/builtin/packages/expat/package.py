@@ -42,7 +42,9 @@ class Expat(AutotoolsPackage):
     # `~libbsd`.
     variant('libbsd', default=sys.platform != 'darwin',
             description="Use libbsd (for high quality randomness)")
+    variant("shared", default=True, description="Enabled shared libraries")
     depends_on('libbsd', when="@2.2.1:+libbsd")
+    depends_on("libxml2")
 
     version('2.2.2', '1ede9a41223c78528b8c5d23e69a2667')
     version('2.2.0', '2f47841c829facb346eb6e3fab5212e2')
@@ -51,5 +53,8 @@ class Expat(AutotoolsPackage):
         spec = self.spec
         args = []
         if '+libbsd' in spec and '@2.2.1:' in spec:
-            args = ['--with-libbsd']
+            args.append('--with-libbsd')
+        if "~shared" in spec:
+            args.append("--disable-shared")
+            args.append("LDFLAGS=-L{0}".format(spec["libxml2"].prefix.lib))
         return args

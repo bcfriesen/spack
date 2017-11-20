@@ -35,3 +35,10 @@ class Proj(AutotoolsPackage):
     version('4.8.0', 'd815838c92a29179298c126effbb1537')
     version('4.7.0', '927d34623b52e0209ba2bfcca18fe8cd')
     version('4.6.1', '7dbaab8431ad50c25669fd3fb28dc493')
+
+    variant("shared", default=True, description="Enable shared libraries")
+
+    def configure_args(self):
+        if "~shared" in self.spec:
+            return ["--disable-shared"]
+        return []

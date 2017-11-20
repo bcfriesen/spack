@@ -38,9 +38,9 @@ class Gettext(AutotoolsPackage):
     variant('curses',   default=True, description='Use libncurses')
     variant('libxml2',  default=True, description='Use libxml2')
     variant('git',      default=True, description='Enable git support')
-    variant('tar',      default=True, description='Enable tar support')
-    variant('bzip2',    default=True, description='Enable bzip2 support')
-    variant('xz',       default=True, description='Enable xz support')
+    variant('tar',      default=False, description='Enable tar support')
+    variant('bzip2',    default=False, description='Enable bzip2 support')
+    variant('xz',       default=False, description='Enable xz support')
     variant("shared",   default=True, description="Enabel shared libs")
 
     # Optional variants
@@ -106,5 +106,6 @@ class Gettext(AutotoolsPackage):
             config_args.append("--enable-shared")
         else:
             config_args.append("--disable-shared")
+            config_args.append("LDFLAGS=Wl,--allow-multiple-definition")
 
         return config_args

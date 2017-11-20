@@ -32,15 +32,15 @@ packages:
     hdf5:
         buildable: false
         modules:
-            hdf5@1.10.0.3%gcc~mpi~shared~szip: cray-hdf5
+            hdf5@1.10.0.3%gcc~mpi~shared~szip+threadsafe: cray-hdf5
             hdf5@1.10.0.3%gcc~mpi+shared~szip: cray-hdf5
             hdf5@1.10.0.3%gcc~mpi+shared+szip: cray-hdf5
             hdf5@1.10.0.3%gcc~mpi~shared+szip: cray-hdf5
-            hdf5@1.10.0.3%intel~mpi~shared~szip: cray-hdf5
+            hdf5@1.10.0.3%intel~mpi~shared~szip+threadsafe: cray-hdf5
             hdf5@1.10.0.3%intel~mpi+shared~szip: cray-hdf5
             hdf5@1.10.0.3%intel~mpi+shared+szip: cray-hdf5
             hdf5@1.10.0.3%intel~mpi~shared+szip: cray-hdf5
-            hdf5@1.10.0.3%intel+mpi~shared~szip: cray-hdf5-parallel
+            hdf5@1.10.0.3%intel+mpi~shared~szip+threadsafe: cray-hdf5-parallel
             hdf5@1.10.0.3%intel+mpi+shared~szip: cray-hdf5-parallel
             hdf5@1.10.0.3%intel+mpi+shared+szip: cray-hdf5-parallel
             hdf5@1.10.0.3%intel+mpi~shared+szip: cray-hdf5-parallel
@@ -56,10 +56,10 @@ packages:
     netcdf:
         buildable: false
         modules:
-            netcdf@4.4.1.1.3%gcc+parallel-netcdf: cray-netcdf-hdf5parallel
-            netcdf@4.4.1.1.3%intel+parallel-netcdf: cray-netcdf-hdf5parallel
-            netcdf@4.4.1.1.3%gcc~parallel-netcdf: cray-netcdf
-            netcdf@4.4.1.1.3%intel~parallel-netcdf: cray-netcdf
+            netcdf@4.4.1.1.3%gcc+parallel-netcdf+mpi: cray-netcdf-hdf5parallel
+            netcdf@4.4.1.1.3%intel+parallel-netcdf+mpi: cray-netcdf-hdf5parallel
+            netcdf@4.4.1.1.3%gcc~parallel-netcdf~mpi: cray-netcdf
+            netcdf@4.4.1.1.3%intel~parallel-netcdf~mpi: cray-netcdf
     python:
         buildable: false
         modules:
