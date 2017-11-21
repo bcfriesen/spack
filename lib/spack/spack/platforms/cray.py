@@ -77,7 +77,7 @@ class Cray(Platform):
             if _target is None:
                 _target = os.environ.get('SPACK_' + name.upper())
             if _target is None and name == 'back_end':
-                _target = self._default_target_from_env()
+                _target = self._default_target_from_cpuinfo()
             if _target is not None:
                 safe_name = _target.replace('-', '_')
                 setattr(self, name, safe_name)
@@ -125,6 +125,23 @@ class Cray(Platform):
     @classmethod
     def detect(cls):
         return os.environ.get('CRAYPE_VERSION') is not None
+
+    def _to_product_name_from(self, model_name):
+        # TODO: Improve this table but for now keep this
+        intel_products = {"Xeon": "haswell",
+                          "Xeon Phi": "mic_knl"}
+        return intel_products.get(model_name, None)
+
+    def _default_target_from_cpuinfo(self):
+        """Set the default target based off of grep from cpuinfo"""
+        # TODO: Need to find a way to map intel models to intel model names
+        target_pattern = re.compile(r'Intel\S*\s(\w+\s?\w+)')
+        if os.path.exists("/proc/cpuinfo"):
+            with open("/proc/cpuinfo", "r") as cpuinfo:
+                for line in cpuinfo:
+                    model_name = target_pattern.findall(line)
+                    if model_name:
+                        return self._to_product_name_from(model_name[0])
 
     def _default_target_from_env(self):
         '''Set and return the default CrayPE target loaded in a clean login

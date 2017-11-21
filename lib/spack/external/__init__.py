@@ -48,4 +48,6 @@ So far:
     pytest:      Testing framework used by Spack.
 
     yaml:        Used for config files.
+
+    bs4:         beautifulsoup used for web scraping
 """
