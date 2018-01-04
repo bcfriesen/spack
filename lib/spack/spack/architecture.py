@@ -500,6 +500,14 @@ def platform():
 
 
 @memoized
+def front_end_sys_type():
+    """ Print out the front end sys type. If the system only has one kind
+    of architecture it will print out the same as front_end"""
+    arch = Arch(platform(), "frontend", "frontend")
+    return str(arch)
+
+
+@memoized
 def sys_type():
     """Print out the "default" platform-os-target tuple for this machine.
 

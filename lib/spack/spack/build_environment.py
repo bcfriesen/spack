@@ -65,6 +65,7 @@ from llnl.util.tty.color import colorize
 from llnl.util.filesystem import join_path, mkdirp, install, install_tree
 
 import spack
+import spack.architecture
 import spack.store
 from spack.environment import EnvironmentModifications, validate
 from spack.util.environment import env_flag, filter_system_paths, get_path
@@ -100,6 +101,23 @@ SPACK_DEBUG_LOG_DIR = 'SPACK_DEBUG_LOG_DIR'
 dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
 
 
+class FrontEndEnvironment(object):
+
+    def __init__(self, pkg):
+        self.pkg = pkg
+        platform = self.pkg.architecture.platform
+        self.frontend_target = platform.target("frontend").module_name
+        self.current_target = pkg.architecture.target.module_name
+
+    def __enter__(self):
+        load_module(self.frontend_target)
+        tty.msg("Detected cross compile environment: Loading {0}".format(self.frontend_target))
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        tty.msg("Loading back {0}".format(self.current_target))
+        load_module(self.current_target)
+
+
 class MakeExecutable(Executable):
     """Special callable executable object for make so the user can
        specify parallel or not on a per-invocation basis.  Using
@@ -124,6 +142,26 @@ class MakeExecutable(Executable):
             args = (jobs,) + args
 
         return super(MakeExecutable, self).__call__(*args, **kwargs)
+
+
+class ConfigureExecutable(Executable):
+    """Special callable executable object for configure. On most platforms
+    there will be no need to do anything special. On Cray systems, if the
+    configure method is for a cross compiled package it will load the front
+    end target module and run configure with that environment
+    """
+
+    def __init__(self, name, pkg):
+        super(ConfigureExecutable, self).__init__(name)
+        self.pkg = pkg
+
+    def __call__(self, *args, **kwargs):
+        if str(self.pkg.spec.architecture) != spack.architecture.front_end_sys_type():
+            with FrontEndEnvironment(self.pkg):
+                result = super(ConfigureExecutable, self).__call__(*args, **kwargs)
+            return result
+        else:
+            return super(ConfigureExecutable, self).__call__(*args, **kwargs)
 
 
 def set_compiler_environment_variables(pkg, env):
@@ -359,7 +397,8 @@ def set_module_variables_for_package(pkg, module):
 
     # Find the configure script in the archive path
     # Don't use which for this; we want to find it in the current dir.
-    m.configure = Executable('./configure')
+    # Add pkg to query spec for cross compilation and load appropriate mods
+    m.configure = ConfigureExecutable('./configure', pkg)
 
     m.cmake = Executable('cmake')
     m.ctest = Executable('ctest')
