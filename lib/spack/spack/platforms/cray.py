@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import platform
 import re
 import llnl.util.tty as tty
 import spack.config
@@ -44,7 +45,7 @@ def _get_modules_in_modulecmd_output(output):
 def _fill_craype_targets_from_modules(targets, modules):
     '''Extend CrayPE CPU targets list with those found in list of modules.'''
     # Craype- module prefixes that are not valid CPU targets.
-    non_targets = ('hugepages', 'network', 'target', 'accel', 'xtpe')
+    non_targets = ('hugepages', 'network', 'target', 'accel', 'xtpe', 'x86')
     pattern = r'craype-(?!{0})(\S*)'.format('|'.join(non_targets))
     for mod in modules:
         if 'craype-' in mod:
@@ -64,12 +65,22 @@ class Cray(Platform):
           configuration file "targets.yaml" with keys 'front_end', 'back_end'
           scanning /etc/bash/bashrc.local for back_end only
         '''
+
+        def parse_target_name(target):
+            """Target modules are conventionally craype-prefix-name with
+            prefix being an optional part of string. This parses it to get
+            just the name for all different length module names"""
+            return target[target.rfind("-") + 1: ]
+
         super(Cray, self).__init__('cray')
+
+        mach = platform.machine()
+        self.add_target(mach, Target(mach))
 
         # Make all craype targets available.
         for target in self._avail_targets():
-            name = target.replace('-', '_')
-            self.add_target(name, Target(name, 'craype-%s' % target))
+            target_name = parse_target_name(target)
+            self.add_target(target_name, Target(target_name, 'craype-%s' % target))
 
         # Get aliased targets from config or best guess from environment:
         for name in ('front_end', 'back_end'):
@@ -78,15 +89,12 @@ class Cray(Platform):
                 _target = os.environ.get('SPACK_' + name.upper())
             if _target is None and name == 'back_end':
                 _target = self._default_target_from_env()
+            if _target is None and name == "front_end":
+                _target = mach
             if _target is not None:
-                safe_name = _target.replace('-', '_')
-                setattr(self, name, safe_name)
-                self.add_target(name, self.targets[safe_name])
-            if _target is None and name == 'front_end':
-                setattr(self, name, 'x86_64')
-                x86_64 = Target('x86_64')
-                self.add_target(name, x86_64)
-                self.add_target('x86_64', x86_64)
+                target_name = _parse_target_name(_target)
+                setattr(self, name, target_name)
+                self.add_target(name, self.targets[target_name])
 
         if self.back_end is not None:
             self.default = self.back_end
