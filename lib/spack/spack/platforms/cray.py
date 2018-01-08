@@ -92,7 +92,7 @@ class Cray(Platform):
             if _target is None and name == "front_end":
                 _target = mach
             if _target is not None:
-                target_name = _parse_target_name(_target)
+                target_name = parse_target_name(_target)
                 setattr(self, name, target_name)
                 self.add_target(name, self.targets[target_name])
 
