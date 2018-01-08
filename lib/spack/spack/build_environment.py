@@ -103,15 +103,15 @@ dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
 
 class FrontEndEnvironment(object):
 
-    def __init__(self, pkg):
-        self.pkg = pkg
-        platform = self.pkg.architecture.platform
+    def __init__(self, arch):
+        platform = arch.platform
         self.frontend_target = platform.target("frontend").module_name
-        self.current_target = pkg.architecture.target.module_name
+        self.current_target = arch.target.module_name
 
     def __enter__(self):
         load_module(self.frontend_target)
-        tty.msg("Detected cross compile environment: Loading {0}".format(self.frontend_target))
+        tty.msg("Detected cross compile environment: Loading {0}".format(
+            self.frontend_target))
 
     def __exit__(self, exception_type, exception_value, traceback):
         tty.msg("Loading back {0}".format(self.current_target))
@@ -151,14 +151,15 @@ class ConfigureExecutable(Executable):
     end target module and run configure with that environment
     """
 
-    def __init__(self, name, pkg):
+    def __init__(self, name, arch):
         super(ConfigureExecutable, self).__init__(name)
-        self.pkg = pkg
+        self.arch = arch
 
     def __call__(self, *args, **kwargs):
-        if str(self.pkg.spec.architecture) != spack.architecture.front_end_sys_type():
-            with FrontEndEnvironment(self.pkg):
-                result = super(ConfigureExecutable, self).__call__(*args, **kwargs)
+        if str(self.arch) != spack.architecture.front_end_sys_type():
+            with FrontEndEnvironment(self.arch):
+                result = super(ConfigureExecutable, self).__call__(*args,
+                                                                   **kwargs)
             return result
         else:
             return super(ConfigureExecutable, self).__call__(*args, **kwargs)
@@ -398,7 +399,7 @@ def set_module_variables_for_package(pkg, module):
     # Find the configure script in the archive path
     # Don't use which for this; we want to find it in the current dir.
     # Add pkg to query spec for cross compilation and load appropriate mods
-    m.configure = ConfigureExecutable('./configure', pkg)
+    m.configure = ConfigureExecutable('./configure', pkg.architecture)
 
     m.cmake = Executable('cmake')
     m.ctest = Executable('ctest')
