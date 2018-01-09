@@ -38,8 +38,8 @@ class Test(Platform):
 
     def __init__(self):
         super(Test, self).__init__('test')
-        self.add_target(self.default, Target(self.default))
-        self.add_target(self.front_end, Target(self.front_end))
+        self.add_target(self.default, Target(self.default, "x86_64"))
+        self.add_target(self.front_end, Target(self.front_end, "x86_32"))
 
         self.add_operating_system(self.default_os, OS('debian', 6))
         self.add_operating_system(self.front_os, OS('redhat', 6))
