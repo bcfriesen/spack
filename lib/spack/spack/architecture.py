@@ -78,6 +78,7 @@ will be responsible for compiler detection.
 import os
 import inspect
 import platform as py_platform
+import re
 
 from llnl.util.lang import memoized, list_modules, key_ordering
 from llnl.util.filesystem import join_path
@@ -85,11 +86,17 @@ import llnl.util.tty as tty
 
 import spack
 from spack.util.naming import mod_to_class
+from spack.util.executable import Executable
 from spack.util.environment import get_path
 from spack.util.multiproc import parmap
 from spack.util.spack_yaml import syaml_dict
 import spack.error as serr
 
+CODE_NAMES = {"E5-4603 0": "sandybridge",
+               "E5-2695 v2": "ivybridge",
+               "E5-2698 v3": "haswell",
+               "E5-2650 v3": "haswell",
+               "CPU 7250": "knl"}
 
 class NoPlatformError(serr.SpackError):
 
@@ -133,7 +140,7 @@ class Platform(object):
     priority        = None  # Subclass sets number. Controls detection order
     front_end       = None
     back_end        = None
-    default         = None  # The default back end target. On cray ivybridge
+    default         = None
 
     front_os        = None
     back_os         = None
@@ -147,15 +154,32 @@ class Platform(object):
         self.operating_sys = {}
         self.name = name
 
+    def detect_target(self):
+        """Detects the target on current node by parsing cpuinfo and then mapping
+        the model number to a code name (for Intel chips). Platforms should
+        override this method if they do not have /proc/cpuinfo (like Darwin)"""
+        model_name = self._parse_model_name_from_cpuinfo()
+        return CODE_NAMES.get(model_name, "")
+
+    def _parse_model_name_from_cpuinfo(self):
+        """Get the model_name from lscpu"""
+        cpuinfo = self._lscpu().split("\n")
+        for line in cpuinfo:
+            match = re.search("CPU\s+(\w+-?\d+\s?\w?\d?)", line)
+            if match:
+                return match.group(1)
+
+    def _lscpu(self):
+        """Same as lscpuinfo but open up the cpuinfo file"""
+        lscpu = Executable("lscpu")
+        return lscpu(output=str)
+
     def add_target(self, name, target):
         """Used by the platform specific subclass to list available targets.
         Raises an error if the platform specifies a name
         that is reserved by spack as an alias.
         """
-        if name in Platform.reserved_targets:
-            raise ValueError(
-                "%s is a spack reserved alias "
-                "and cannot be the name of a target" % name)
+        self._check_valid_target(name)
         self.targets[name] = target
 
     def target(self, name):
@@ -166,9 +190,9 @@ class Platform(object):
         """
         if name == 'default_target':
             name = self.default
-        elif name == 'frontend' or name == 'fe':
+        elif name in ('frontend', 'fe'):
             name = self.front_end
-        elif name == 'backend' or name == 'be':
+        elif name in ('backend', 'be'):
             name = self.back_end
 
         return self.targets.get(name, None)
@@ -230,6 +254,11 @@ class Platform(object):
                 t_keys,
                 o_keys)
 
+    def _check_valid_target(self, name):
+        if name in Platform.reserved_targets:
+            raise ValueError(
+                "%s is a spack reserved alias "
+                "and cannot be the name of a target" % name)
 
 @key_ordering
 class OperatingSystem(object):
@@ -335,7 +364,7 @@ class OperatingSystem(object):
                 if newcount <= prevcount:
                     continue
 
-            compilers[ver] = cmp_cls(spec, self, py_platform.machine(), paths)
+            compilers[ver] = cmp_cls(spec, self, detect_target(), paths)
 
         return list(compilers.values())
 
@@ -518,7 +547,7 @@ def sys_type():
     TODO: replace with use of more explicit methods to get *all* the
     backends, as client code should really be aware of cross-compiled
     architectures.
-
     """
     arch = Arch(platform(), 'default_os', 'default_target')
     return str(arch)
+
