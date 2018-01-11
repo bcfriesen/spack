@@ -109,13 +109,12 @@ class FrontEndEnvironment(object):
         self.current_target = arch.target.module_name
 
     def __enter__(self):
-        load_module(self.frontend_target)
-        tty.msg("Detected cross compile environment: Loading {0}".format(
-            self.frontend_target))
+        tty.msg("Loading {}".format(self.frontend_target))
+        return load_module(self.frontend_target)
 
     def __exit__(self, exception_type, exception_value, traceback):
-        tty.msg("Loading back {0}".format(self.current_target))
-        load_module(self.current_target)
+        tty.msg("Loading {}".format(self.current_target))
+        return load_module(self.current_target)
 
 
 class MakeExecutable(Executable):
