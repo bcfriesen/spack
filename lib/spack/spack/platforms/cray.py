@@ -45,7 +45,7 @@ def _get_modules_in_modulecmd_output(output):
 def _fill_craype_targets_from_modules(targets, modules):
     '''Extend CrayPE CPU targets list with those found in list of modules.'''
     # Craype- module prefixes that are not valid CPU targets.
-    non_targets = ('hugepages', 'network', 'target', 'accel', 'xtpe', 'x86')
+    non_targets = ('hugepages', 'network', 'target', 'accel', 'xtpe', 'x86', "ml")
     pattern = r'craype-(?!{0})(\S*)'.format('|'.join(non_targets))
     for mod in modules:
         if 'craype-' in mod:
@@ -73,32 +73,25 @@ class Cray(Platform):
             return target[target.rfind("-") + 1: ]
 
         super(Cray, self).__init__('cray')
-
-        mach = platform.machine()
-        self.add_target(mach, Target(mach))
+        self.targets = {"front_end": [], "back_end": []}
+        self.front_end = []
+        self.back_end = []
 
         # Make all craype targets available.
         for target in self._avail_targets():
             target_name = parse_target_name(target)
             self.add_target(target_name, Target(target_name, 'craype-%s' % target))
 
-        # Get aliased targets from config or best guess from environment:
-        for name in ('front_end', 'back_end'):
-            _target = getattr(self, name, None)
-            if _target is None:
-                _target = os.environ.get('SPACK_' + name.upper())
-            if _target is None and name == 'back_end':
-                _target = self._default_target_from_env()
-            if _target is None and name == "front_end":
-                _target = mach
-            if _target is not None:
-                target_name = parse_target_name(_target)
-                setattr(self, name, target_name)
-                self.add_target(name, self.targets[target_name])
+        # detects what is on current arch. This assumes that we do not
+        # compile on compute node (on Crays recommended that you don't)
+        # So we set frontend to what we compile without allocating time to
+        # compute node
+        self._set_aliased_target("front_end", self.detect_target)
+        self._set_aliased_target("back_end", self._default_target_from_env)
 
-        if self.back_end is not None:
-            self.default = self.back_end
-            self.add_target('default', self.targets[self.back_end])
+        if self.back_end:
+            self.default = self.back_end[0]
+            self.add_target('default', self.targets[self.back_end[0]])
         else:
             raise NoPlatformError()
 
@@ -111,6 +104,36 @@ class Cray(Platform):
 
         self.add_operating_system(self.back_os, back_distro)
         self.add_operating_system(self.front_os, front_distro)
+
+    def _set_aliased_target(self, end, detection_method):
+        targets = os.environ.get("SPACK_" + end.upper(), "").split(",")
+        target_property = getattr(self, end)
+        if '' not in targets:
+            for t in targets:
+                target_property.append(t)
+                self.add_target(end, self.targets[t])
+        else:
+            target = detection_method()
+            target_property.append(target)
+            self.add_target(end, self.targets[target])
+        setattr(self, end, target_property)
+
+    def add_target(self, name, target):
+        self._check_valid_target(name)
+        if name in ("front_end", "back_end"):
+            return self.targets[name].append(target)
+        else:
+            self.targets[name] = target
+
+    def target(self, name):
+        if name == "default_target":
+            return self.targets.get("default", None)
+        elif name in ("frontend", "fe"):
+            return self.targets.get("front_end", [])[0]
+        elif name in ("backend", "be"):
+            return self.targets.get("back_end", [])[0]
+        else:
+            return self.targets.get(name, None)
 
     @classmethod
     def setup_platform_environment(cls, pkg, env):
