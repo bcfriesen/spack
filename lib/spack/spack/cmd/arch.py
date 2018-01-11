@@ -36,10 +36,15 @@ def setup_parser(subparser):
     parts.add_argument(
         '-p', '--platform', action='store_true', default=False,
         help="print only the platform")
+    parts.add_argument(
+        '-fe', '--frontend', action='store_true', default=False,
+        help="print the frontend architecture")
 
 
 def arch(parser, args):
     if args.platform:
         print(architecture.platform())
+    elif args.frontend:
+        print(architecture.front_end_sys_type())
     else:
         print(architecture.sys_type())
