@@ -43,7 +43,21 @@ packages:
             hdf5@1.10.0.3%cce~mpi+hl: cray-hdf5
             hdf5@1.10.0.3%intel+mpi+hl: cray-netcdf-hdf5parallel
             hdf5@1.10.0.3%gcc+mpi+hl: cray-netcdf-hdf5parallel
-            hdf5@1.10.0.3%cce+mpi+hl: cray-netcdf-hdf5parallel
+    petsc: 
+         buildable: false            
+         modules:            
+            petsc@3.7.6.0%gcc~complex~int64 : cray-petsc
+            petsc@3.7.6.0%intel~complex~int64 : cray-petsc
+            petsc@3.7.6.0%cce~complex~int64: cray-petsc
+            petsc@3.7.6.0%gcc+complex~int64 : cray-petsc-complex
+            petsc@3.7.6.0%intel+complex~int64 : cray-petsc-complex
+            petsc@3.7.6.0%cce+complex~int64: cray-petsc-complex
+            petsc@3.7.6.0%gcc~complex+int64 : cray-petsc-64
+            petsc@3.7.6.0%intel~complex+int64: cray-petsc-64
+            petsc@3.7.6.0%cce~complex+int64: cray-petsc-64
+            petsc@3.7.6.0%gcc+complex+int64 : cray-petsc-complex-64
+            petsc@3.7.6.0%intel+complex+int64 : cray-petsc-complex-64
+            petsc@3.7.6.0%cce+complex+int64: cray-petsc-complex-64
     cray-libsci:
         buildable: false
         modules:
