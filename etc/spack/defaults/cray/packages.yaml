@@ -1,6 +1,8 @@
 packages:
     all:
         compiler: [intel@18.0.1.163, gcc@7.1.0, cce@8.6.2]
+        variants: ~shared
+        craype_link_type: "static"
         providers:
             mpi: [mpich, openmpi]
             mkl: [intel-mkl]
