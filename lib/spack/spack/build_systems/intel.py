@@ -26,7 +26,7 @@
 import os
 import xml.etree.ElementTree as ET
 
-from llnl.util.filesystem import install, join_path
+from llnl.util.filesystem import install, join_path, LibraryList
 from spack.package import PackageBase, run_after
 from spack.util.executable import Executable
 
@@ -40,6 +40,28 @@ def _valid_components():
     components = root.findall('.//Abbr')
     for component in components:
         yield component.text
+
+
+# TODO: This is kinda ugly and adds another class to maintain, perhaps
+# consider doing Andrew's suggestion of creating a function that can be 
+# overridden in LibraryList
+class IntelLibraryList(LibraryList):
+
+    @property
+    def ld_flags(self):
+        """At the moment we look for three system libraries
+        -Wl,--start-group
+        ${MKLROOT}/lib/intel64/libmkl_intel_ilp64.a
+        ${MKLROOT}/lib/intel64/libmkl_intel_thread.a
+        ${MKLROOT}/lib/intel64/libmkl_core.a
+        -Wl,--end-group -liomp5 -lpthread -lm -ldl.
+        This only needs to be done if we are statically linking"""
+
+        system_libs = LibraryList(self.files[-3:])
+        del self.files[-3:]
+        grouping = "-Wl,--start-group {0} -Wl,--end-group"
+        grouping = grouping.format(' '.join(self.files))
+        return grouping + " " + system_libs.link_flags
 
 
 class IntelPackage(PackageBase):

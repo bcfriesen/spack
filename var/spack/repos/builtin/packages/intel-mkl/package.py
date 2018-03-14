@@ -27,6 +27,9 @@ import sys
 
 from spack import *
 from spack.environment import EnvironmentModifications
+from llnl.util.filesystem import LibraryList
+from spack.build_systems.intel import IntelLibraryList
+
 
 
 class IntelMkl(IntelPackage):
@@ -100,6 +103,7 @@ class IntelMkl(IntelPackage):
 
     @property
     def blas_libs(self):
+
         spec = self.spec
         prefix = self.prefix
         shared = '+shared' in spec
@@ -151,7 +155,19 @@ class IntelMkl(IntelPackage):
             shared=shared
         )
 
-        return mkl_libs + omp_libs + system_libs
+        def set_ld_flags():
+            """Wrap ld flags with -Wl,--start-group -Wl,--end-group for
+            static linking of mkl flags. Since they have a circular dependency
+            """
+            grouping = "-Wl,--start-group {} -Wl,--end-group"
+            mkl = ' '.join(mkl_libs.files + omp_libs.files)
+            return grouping.format(mkl) + system_libs.link_flags
+
+        libs = mkl_libs + omp_libs + system_libs
+
+        if not shared:
+            setattr(libs, 'create_ld_flags', set_ld_flags)
+        return libs
 
     @property
     def lapack_libs(self):

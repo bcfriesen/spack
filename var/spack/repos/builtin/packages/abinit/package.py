@@ -120,7 +120,8 @@ class Abinit(AutotoolsPackage):
         if '+mpi' in spec:
             # MPI version:
             # let the configure script auto-detect MPI support from mpi_prefix
-            oapp('--with-mpi-prefix={0}'.format(spec['mpi'].prefix))
+            if not self.spec.architecture.platform == "cray":
+                oapp('--with-mpi-prefix={0}'.format(spec['mpi'].prefix))
             oapp('--enable-mpi=yes')
             oapp('--enable-mpi-io=yes')
 
@@ -132,11 +133,12 @@ class Abinit(AutotoolsPackage):
         linalg = spec['lapack'].libs + spec['blas'].libs
         if '+scalapack' in spec:
             oapp('--with-linalg-flavor=custom+scalapack')
-            linalg = spec['scalapack'].libs + linalg
         elif spec.satisfies("^intel-mkl"):
             oapp("--with-linalg-flavor=mkl")
         else:
             oapp('--with-linalg-flavor=custom')
+
+        linalg = spec['scalapack'].libs + linalg
 
         oapp('--with-linalg-libs={0}'.format(linalg.ld_flags))
 

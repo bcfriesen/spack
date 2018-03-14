@@ -109,12 +109,11 @@ class Cray(Platform):
         """ Change the linker to default dynamic to be more
             similar to linux/standard linker behavior
         """
-        packages = spack.config.get_config("packages")
-        link_type = packages.get(pkg.name, {}).get("craype_link_type", "")
-        if not link_type:
-            link_type = packages.get("all").get("craype_link_type")
-        if not link_type:
+        if "+shared" in pkg.spec:
             link_type = "dynamic"
+        else:
+            link_type = "static"
+        tty.debug("CRAYPE_LINK_TYPE={0}".format(link_type))
         env.set('CRAYPE_LINK_TYPE', link_type)
         cray_wrapper_names = join_path(build_env_path, 'cray')
 

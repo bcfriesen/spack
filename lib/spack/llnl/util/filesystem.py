@@ -992,6 +992,11 @@ class LibraryList(FileList):
         """
         return ' '.join(['-l' + name for name in self.names])
 
+
+    def create_ld_flags(self):
+        return self.search_flags + ' ' + self.link_flags
+
+
     @property
     def ld_flags(self):
         """Search flags + link flags
@@ -1003,7 +1008,7 @@ class LibraryList(FileList):
         Returns:
             str: A joined list of search flags and link flags
         """
-        return self.search_flags + ' ' + self.link_flags
+        return self.create_ld_flags()
 
 
 def find_system_libraries(libraries, shared=True):

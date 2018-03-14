@@ -91,6 +91,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     phases = ['configure', 'build', 'install']
 
+
     def configure_args(self):
         spec = self.spec
         prefix = self.prefix
@@ -127,6 +128,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
         if '+shared' in spec:
             config_args.append('-Duseshrplib')
+
+        config_args.append('Accflags={0}'.format(self.spec['gdbm'].libs.ld_flags))
 
         return config_args
 

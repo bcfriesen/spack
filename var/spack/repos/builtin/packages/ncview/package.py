@@ -44,5 +44,7 @@ class Ncview(AutotoolsPackage):
 
         if spec.satisfies('^netcdf+mpi'):
             config_args.append('CC={0}'.format(spec['mpi'].mpicc))
+        elif spec.satisfies("platform=cray"):
+            config_args.append('CC={0}'.format(spack_cc))
 
         return config_args

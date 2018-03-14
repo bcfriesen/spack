@@ -51,6 +51,7 @@ class Espresso(Package):
     )
     version('5.3.0', '6848fcfaeb118587d6be36bd10b7f2c3')
 
+    variant("shared", default=True, description="Build with shared libraries")
     variant('mpi', default=True, description='Builds with mpi support')
     variant('openmp', default=False, description='Enables openMP support')
     variant('scalapack', default=True, description='Enables scalapack support')
@@ -130,7 +131,7 @@ class Espresso(Package):
 
             options.extend([
                 '--with-elpa-include={0}'.format(elpa_include),
-                '--with-elpa-lib={0}'.format(elpa.libs[0])
+                '--with-elpa-lib={0}'.format(elpa.libs.search_flags)
             ])
 
         if '+hdf5' in spec:

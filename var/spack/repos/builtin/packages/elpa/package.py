@@ -40,6 +40,7 @@ class Elpa(AutotoolsPackage):
 
     variant('openmp', default=False, description='Activates OpenMP support')
     variant('optflags', default=True, description='Build with optimization flags')
+    variant("avx", default=True, description="Enable avx optimiziation")
 
     depends_on('mpi')
     depends_on('blas')
@@ -65,13 +66,19 @@ class Elpa(AutotoolsPackage):
     def setup_environment(self, spack_env, run_env):
         spec = self.spec
 
-        spack_env.set('CC', spec['mpi'].mpicc)
-        spack_env.set('FC', spec['mpi'].mpifc)
-        spack_env.set('CXX', spec['mpi'].mpicxx)
+        if not self.spec.architecture.platform == "cray":
+            spack_env.set('CC', spec['mpi'].mpicc)
+            spack_env.set('FC', spec['mpi'].mpifc)
+            spack_env.set('CXX', spec['mpi'].mpicxx)
 
-        spack_env.append_flags('LDFLAGS', spec['lapack'].libs.search_flags)
-        spack_env.append_flags('LIBS', spec['lapack'].libs.link_flags)
-        spack_env.set('SCALAPACK_LDFLAGS', spec['scalapack'].libs.joined())
+        if "~shared" in self.spec:
+            lapack_libs = spec["lapack"].libs.ld_flags
+        else:
+            lapack_libs = spec['lapack'].libs.search_flags
+            spack_env.append_flags('LIBS', spec['lapack'].libs.link_flags)
+
+        spack_env.append_flags('LDFLAGS', lapack_libs)
+        spack_env.append_flags('CPPFLAGS', spec['mpi'].headers.include_flags)
 
     def configure_args(self):
         # TODO: set optimum flags for platform+compiler combo, see
@@ -84,10 +91,24 @@ class Elpa(AutotoolsPackage):
         # Could not compile test program, try with --disable-sse, or
         # adjust the C compiler or CFLAGS
         if '+optflags' in self.spec:
-            options.extend([
-                'FCFLAGS=-O2 -march=native -ffree-line-length-none',
-                'CFLAGS=-O2 -march=native'
-            ])
+            fc_flags = 'FCFLAGS=-O2 -march=native -ffree-line-length-none'
+            cflags = 'CFLAGS=-O2 -march=native'
+
         if '+openmp' in self.spec:
+            cflags = cflags + " " + self.compiler.openmp_flag
+            fc_flags = fc_flags + " " + self.compiler.openmp_flag
             options.append('--enable-openmp')
+
+        options.extend([fc_flags, cflags])
+
+        options.append("SCALAPACK_LDFLAGS={0}".format(self.spec['scalapack'].libs.ld_flags))
+        options.append("SCALAPACK_FCFLAGS={0}".format(self.spec['scalapack'].libs.ld_flags))
+        options.append("CPPFLAGS={0}".format(self.spec['mpi'].headers.include_flags))
+
+        if "+avx" in self.spec:
+            options.append("--with-avx-optimization=yes")
+
+        if "~shared" in self.spec:
+            options.append("--disable-shared --enable-static")
+
         return options

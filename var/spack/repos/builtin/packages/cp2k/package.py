@@ -46,6 +46,7 @@ class Cp2k(Package):
     variant('smm', default='libxsmm', values=('libxsmm', 'libsmm', 'none'),
             description='Library for small matrix multiplications')
     variant('plumed', default=False, description='Enable PLUMED support')
+    variant("shared", default=True, description="Build dynamic")
 
     depends_on('python', type='build')
 
