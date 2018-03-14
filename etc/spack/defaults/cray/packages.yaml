@@ -25,7 +25,6 @@ packages:
             mpich@7.6.2%cce: cray-mpich
     intel-mkl:
         buildable: false
-        variants: ~shared
         paths:
             intel-mkl@2018.1.163%intel: /opt/intel
             intel-mkl@2018.1.163%gcc: /opt/intel
@@ -78,7 +77,3 @@ packages:
             trilinos@12.10.1.1%gcc: cray-trilinos
             trilinos@12.10.1.1%intel: cray-trilinos
             trilinos@12.10.1.1%cce: cray-trilinos
-    python:
-        variants: +shared
-    perl:
-        variants: +shared
