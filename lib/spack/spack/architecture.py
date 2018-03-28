@@ -86,6 +86,8 @@ import llnl.util.tty as tty
 import spack
 from spack.util.naming import mod_to_class
 from spack.util.environment import get_path
+from spack.util.module_cmd import (get_module_cmd, ModuleError,
+                                   get_path_from_module)
 from spack.util.multiproc import parmap
 from spack.util.spack_yaml import syaml_dict
 import spack.error as serr
@@ -252,14 +254,45 @@ class OperatingSystem(object):
     def _cmp_key(self):
         return (self.name, self.version)
 
+    def __modules_present(self):
+        try:
+            get_module_cmd()
+            return True
+        except ModuleError:
+            return False
+
+    def _find_paths_through_modules(self):
+        compiler_types = spack.compilers.all_compiler_types()
+        compilers = []
+        for cmp_class in compiler_types:
+            if cmp_class.PrgEnv:
+                if not cmp_class.PrgEnv_compiler:
+                    tty.die("Must supply PrgEnv_compiler with PrgEnv")
+
+            modulecmd = get_module_cmd()
+            output = modulecmd(
+                    'avail', cmp_class.PrgEnv_compiler, output=str, error=str)
+            version_regex = r'(%s)/([\d\.]+[\d])' % cmp_class.PrgEnv_compiler
+            matches = re.findall(version_regex, output)
+
+            paths = []
+            for name, version in matches:
+                modname = name + '/' + version
+                paths.append(get_path_from_module(modname))
+
+        return paths
+
     def find_compilers(self, *paths):
         """
         Return a list of compilers found in the supplied paths.
         This invokes the find() method for each Compiler class,
         and appends the compilers detected to a list.
         """
-        if not paths:
+        if not paths and not self.__modules_present():
             paths = get_path('PATH')
+        else:
+            paths = self._find_paths_through_modules()
+
         # Make sure path elements exist, and include /bin directories
         # under prefixes.
         filtered_path = []
@@ -513,4 +546,130 @@ def sys_type():
 
     """
     arch = Arch(platform(), 'default_os', 'default_target')
+    @classmethod
+    def _find_paths_through_modules(cls):
+        compiler_types = spack.compilers.all_compiler_types()
+        compilers = []
+        for cmp_class in compiler_types:
+            if cmp_class.PrgEnv:
+                if not cmp_class.PrgEnv_compiler:
+                    tty.die("Must supply PrgEnv_compiler with PrgEnv")
+
+            modulecmd = get_module_cmd()
+            output = modulecmd(
+                    'avail', cmp_class.PrgEnv_compiler, output=str, error=str)
+            version_regex = r'(%s)/([\d\.]+[\d])' % cmp_class.PrgEnv_compiler
+            matches = re.findall(version_regex, output)
+
+            paths = []
+            for name, version in matches:
+                modname = name + '/' + version
+                paths.append(get_path_from_module(modname))
+
+        return paths
+    @classmethod
+    def _find_paths_through_modules(cls):
+        compiler_types = spack.compilers.all_compiler_types()
+        compilers = []
+        for cmp_class in compiler_types:
+            if cmp_class.PrgEnv:
+                if not cmp_class.PrgEnv_compiler:
+                    tty.die("Must supply PrgEnv_compiler with PrgEnv")
+
+            modulecmd = get_module_cmd()
+            output = modulecmd(
+                    'avail', cmp_class.PrgEnv_compiler, output=str, error=str)
+            version_regex = r'(%s)/([\d\.]+[\d])' % cmp_class.PrgEnv_compiler
+            matches = re.findall(version_regex, output)
+
+            paths = []
+            for name, version in matches:
+                modname = name + '/' + version
+                paths.append(get_path_from_module(modname))
+
+        return paths
+    @classmethod
+    def _find_paths_through_modules(cls):
+        compiler_types = spack.compilers.all_compiler_types()
+        compilers = []
+        for cmp_class in compiler_types:
+            if cmp_class.PrgEnv:
+                if not cmp_class.PrgEnv_compiler:
+                    tty.die("Must supply PrgEnv_compiler with PrgEnv")
+
+            modulecmd = get_module_cmd()
+            output = modulecmd(
+                    'avail', cmp_class.PrgEnv_compiler, output=str, error=str)
+            version_regex = r'(%s)/([\d\.]+[\d])' % cmp_class.PrgEnv_compiler
+            matches = re.findall(version_regex, output)
+
+            paths = []
+            for name, version in matches:
+                modname = name + '/' + version
+                paths.append(get_path_from_module(modname))
+
+        return paths
+    @classmethod
+    def _find_paths_through_modules(cls):
+        compiler_types = spack.compilers.all_compiler_types()
+        compilers = []
+        for cmp_class in compiler_types:
+            if cmp_class.PrgEnv:
+                if not cmp_class.PrgEnv_compiler:
+                    tty.die("Must supply PrgEnv_compiler with PrgEnv")
+
+            modulecmd = get_module_cmd()
+            output = modulecmd(
+                    'avail', cmp_class.PrgEnv_compiler, output=str, error=str)
+            version_regex = r'(%s)/([\d\.]+[\d])' % cmp_class.PrgEnv_compiler
+            matches = re.findall(version_regex, output)
+
+            paths = []
+            for name, version in matches:
+                modname = name + '/' + version
+                paths.append(get_path_from_module(modname))
+
+        return paths
+    @classmethod
+    def _find_paths_through_modules(cls):
+        compiler_types = spack.compilers.all_compiler_types()
+        compilers = []
+        for cmp_class in compiler_types:
+            if cmp_class.PrgEnv:
+                if not cmp_class.PrgEnv_compiler:
+                    tty.die("Must supply PrgEnv_compiler with PrgEnv")
+
+            modulecmd = get_module_cmd()
+            output = modulecmd(
+                    'avail', cmp_class.PrgEnv_compiler, output=str, error=str)
+            version_regex = r'(%s)/([\d\.]+[\d])' % cmp_class.PrgEnv_compiler
+            matches = re.findall(version_regex, output)
+
+            paths = []
+            for name, version in matches:
+                modname = name + '/' + version
+                paths.append(get_path_from_module(modname))
+
+        return paths
+    @classmethod
+    def _find_paths_through_modules(cls):
+        compiler_types = spack.compilers.all_compiler_types()
+        compilers = []
+        for cmp_class in compiler_types:
+            if cmp_class.PrgEnv:
+                if not cmp_class.PrgEnv_compiler:
+                    tty.die("Must supply PrgEnv_compiler with PrgEnv")
+
+            modulecmd = get_module_cmd()
+            output = modulecmd(
+                    'avail', cmp_class.PrgEnv_compiler, output=str, error=str)
+            version_regex = r'(%s)/([\d\.]+[\d])' % cmp_class.PrgEnv_compiler
+            matches = re.findall(version_regex, output)
+
+            paths = []
+            for name, version in matches:
+                modname = name + '/' + version
+                paths.append(get_path_from_module(modname))
+
+        return paths
     return str(arch)
