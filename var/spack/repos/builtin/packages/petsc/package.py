@@ -166,10 +166,17 @@ class Petsc(Package):
                 '--with-cc=%s' % os.environ['CC'],
                 '--with-cxx=%s' % (os.environ['CXX']
                                    if self.compiler.cxx is not None else '0'),
-                '--with-fc=%s' % (os.environ['FC']
-                                  if self.compiler.fc is not None else '0'),
                 '--with-mpi=0'
             ]
+
+            if self.compiler.fc is not None:
+                fortran_args = ['--with-fc=%s' % os.environ['FC']]
+                fortran_args.append("F77=%s" % os.environ['FC'])
+            else:
+                fortran_args.append("--with-fc=0")
+
+            compiler_opts.extend(fortran_args)
+
             error_message_fmt = \
                 '\t{library} support requires "+mpi" to be activated'
 
@@ -188,6 +195,7 @@ class Petsc(Package):
                 '--with-cxx=%s' % self.spec['mpi'].mpicxx,
                 '--with-fc=%s' % self.spec['mpi'].mpifc
             ]
+            compiler_opts.append("F77=%s" % self.spec['mpi'].mpifc)
         return compiler_opts
 
     def install(self, spec, prefix):

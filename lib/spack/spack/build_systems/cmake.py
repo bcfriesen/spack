@@ -116,6 +116,8 @@ class CMakePackage(PackageBase):
         # standard CMake arguments
         std_cmake_args = CMakePackage._std_args(self)
         std_cmake_args += getattr(self, 'cmake_flag_args', [])
+        if self.spec.satisfies("~shared"):
+            std_cmake_args = self.filter_cmake_rpaths(std_cmake_args)
         return std_cmake_args
 
     @staticmethod
@@ -162,7 +164,20 @@ class CMakePackage(PackageBase):
                 pkg.spec.dependencies(deptype=('build', 'link'))]
         deps = filter_system_paths(deps)
         args.append('-DCMAKE_PREFIX_PATH:STRING={0}'.format(';'.join(deps)))
+
         return args
+
+    def filter_cmake_rpaths(self, cmake_args):
+        """Filter anything that has RPATH if the build is static. If CMake
+        sees anything with RPATHs it will assume dynamic linking"""
+        rpath_options = []
+        for o in cmake_args:
+            if o.find('RPATH') >= 0:
+                rpath_options.append(o)
+        for o in rpath_options:
+            cmake_args.remove(o)
+        return cmake_args
+
 
     def flags_to_build_system_args(self, flags):
         """Produces a list of all command line arguments to pass the specified
